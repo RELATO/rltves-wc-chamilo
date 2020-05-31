@@ -101,6 +101,73 @@ register_deactivation_hook( __FILE__, 'deactivate_rltves_wc_chamilo' );
  */
 require plugin_dir_path( __FILE__ ) . 'includes/class-rltves-wc-chamilo.php';
 
+// using the init hook to easy test something 
+
+/**
+ * Fire on the initialization of the admin screen or scripts.
+ */
+add_action( 'admin_init', 'rltves_admin_init_do_something');
+function rltves_admin_init_do_something() {
+
+	$chamilo_databasename = get_option( 'rltves-wc-chamilo_databasename', true );
+	if ( ! isset( $chamilo_databasename ) ) :
+		return;
+	endif;
+	
+	$user_id = 1; // admin by default
+
+	$courses = getChamiloNewCourses();
+	foreach ($courses as $course):
+
+		$post = array(
+			'post_author' => $user_id,
+			'post_content' => $course->description,
+			'post_status' => "draft",
+			'post_title' => $course->title,
+			'post_parent' => '',
+			'post_type' => "product",
+		);
+	
+		$wp_error = null;
+		//Create post
+		$post_id = wp_insert_post( $post, $wp_error );
+		// if($post_id){
+		// 	$attach_id = get_post_meta($product->parent_id, "_thumbnail_id", true);
+		// 	add_post_meta($post_id, '_thumbnail_id', $attach_id);
+		// }
+		if ($post_id) {
+		
+			wp_set_object_terms( $post_id, 'curso', 'product_cat' );
+			wp_set_object_terms( $post_id, 'simple', 'product_type');
+			
+			update_post_meta( $post_id, '_visibility', 'visible' );
+			update_post_meta( $post_id, '_stock_status', 'instock');
+			update_post_meta( $post_id, 'total_sales', '0');
+			update_post_meta( $post_id, '_downloadable', 'no');
+			update_post_meta( $post_id, '_virtual', 'yes');
+			update_post_meta( $post_id, '_regular_price', "1" );
+			update_post_meta( $post_id, '_sale_price', "1" );
+			update_post_meta( $post_id, '_purchase_note', "" );
+			update_post_meta( $post_id, '_featured', "no" );
+			update_post_meta( $post_id, '_weight', "" );
+			update_post_meta( $post_id, '_length', "" );
+			update_post_meta( $post_id, '_width', "" );
+			update_post_meta( $post_id, '_height', "" );
+			update_post_meta( $post_id, '_sku', $course->code);
+			update_post_meta( $post_id, '_product_attributes', array());
+			update_post_meta( $post_id, '_sale_price_dates_from', "" );
+			update_post_meta( $post_id, '_sale_price_dates_to', "" );
+			update_post_meta( $post_id, '_price', "1" );
+			update_post_meta( $post_id, '_sold_individually', "" );
+			update_post_meta( $post_id, '_manage_stock', "no" );
+			update_post_meta( $post_id, '_backorders', "no" );
+			update_post_meta( $post_id, '_stock', "" );
+
+			deleteChamiloNewCourse($course->id);
+
+		}
+	endforeach;
+}
 
 function relatives_wc_woocommerce_payment_complete( $order_id ) {
     error_log( "RELATIVES-Payment has been received for order $order_id" );
@@ -151,7 +218,7 @@ function relatives_wc_processing($order_id) {
 			'expiration_date'=>'2030-01-01 23:59:00',
 			'active' => 1,
 			'status' => 5,
-			'official_code' => 1,
+			'official_code' => $chamilo_user_id,
 			'creator_id' => 1,
 			'hr_dept_id' => 0,
 		);
@@ -166,7 +233,7 @@ function relatives_wc_processing($order_id) {
 				$rltvesdb->update( 
 					'user',
 					$userdata,
-					array('user_id' => $retId)
+					array('id' => $retId)
 				);
 			} else {
 				$rltvesdb->insert( 
@@ -328,16 +395,10 @@ function relatives_wc_product_update($product_id, $product) {
 		require_rltves_db(); // check db connection
 		$rltvesdb = $GLOBALS["rltvesdb"];
     
-		// if (isset($rltvesdb)) {
-        if (true) {    
-    
-            $retId = getCourseIDByCode($product->get_sku());
-        // print_r('entrei no evento update/transiente/issetANTES');
-        // print_r($retId);
-        // die;
+		if (isset($rltvesdb)) {
             
-
-			if ($retId > 0) {
+            $retId = getCourseIDByCode($product->get_sku());
+        	if ($retId > 0) {
 				$rltvesdb->update( 
 					'course',
 					$coursedata,
@@ -361,6 +422,34 @@ function relatives_wc_product_update($product_id, $product) {
     }
 }
 
+function getChamiloNewCourses() {
+	
+	require_rltves_db(); // check db connection
+	$rltvesdb = $GLOBALS["rltvesdb"];
+	
+	if (isset($rltvesdb)) {
+
+		$query = $rltvesdb->prepare( "DESCRIBE `tc_newcourse`");
+		$results = $rltvesdb->get_results($query);
+		if ( isset($results) ) {
+			$newcourses = $rltvesdb->get_results("SELECT id, course_id, code, title, description FROM tc_newcourse"); 
+			return $newcourses;			
+		} else {
+			$newcourses = array();
+		}
+	}	
+}
+
+function deleteChamiloNewCourse($newcourse_id) {
+	require_rltves_db(); // check db connection
+	$rltvesdb = $GLOBALS["rltvesdb"];
+	
+	if (isset($rltvesdb)) {
+		$where = array('id'=>$newcourse_id);
+		return $result = $rltvesdb->delete('tc_newcourse',$where);
+	}	
+}
+
 function getUserIDByUsername($email) {
 
 	require_rltves_db(); // check db connection
@@ -368,7 +457,7 @@ function getUserIDByUsername($email) {
 	
 	if (isset($rltvesdb)) {
 
-	  $idRef = $rltvesdb->get_var("SELECT user_id FROM user WHERE username = '".$email."'"); 
+	  $idRef = $rltvesdb->get_var("SELECT id FROM user WHERE username = '".$email."'"); 
 	  return $idRef;
 
 	} else {
@@ -411,7 +500,6 @@ function require_rltves_db() {
     if ( isset( $GLOBALS["rltvesdb"] ) )
         return;
 		
-
 	$chamilo_host = get_option( 'rltves-wc-chamilo_host', true );
 	// $chamilo_port = get_option( 'rltves-wc-chamilo_port', true );
 	$chamilo_databasename = get_option( 'rltves-wc-chamilo_databasename', true );
