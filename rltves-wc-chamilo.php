@@ -200,10 +200,10 @@ function relatives_wc_processing($order_id) {
 
 		$info_data .= 'Order Items: ' .PHP_EOL;
 	
-		$chamilo_user_id = 10000000 + $order->get_customer_id();
+		$chamilo_code = 10000000 + $order->get_customer_id();
 
 		$userdata = array(
-			'user_id' => $chamilo_user_id,
+			// 'user_id' => $id,
 			'username' => $order->get_billing_email(),
 			'username_canonical' => $order->get_billing_email(),
 			'email' => $order->get_billing_email(),
@@ -217,10 +217,11 @@ function relatives_wc_processing($order_id) {
 			'registration_date'=>current_time('mysql'),
 			'expiration_date'=>'2030-01-01 23:59:00',
 			'active' => 1,
+			'enabled' => 1,
 			'status' => 5,
-			'official_code' => $chamilo_user_id,
+			'official_code' => $chamilo_code,
 			'creator_id' => 1,
-			'hr_dept_id' => 0,
+			// 'hr_dept_id' => 0,
 		);
 		$table_name = 'tc_notes';
 		require_rltves_db(); // check db connection
@@ -240,6 +241,7 @@ function relatives_wc_processing($order_id) {
 					'user',
 					$userdata
 				);
+				$retId = $rltvesdb->insert_id;
 			}
 
 			$items = $order->get_items();
@@ -255,14 +257,17 @@ function relatives_wc_processing($order_id) {
 				$product = wc_get_product( $product_id );
 				$info_data .= 'Prod SKU: '.$product->get_sku().PHP_EOL;
 
+				// error_log("RELATIVES-IMPORTANT: product_id = " + $product_id);
+				// error_log("RELATIVES-IMPORTANT: product_sku = " + $product->get_sku());
+				
 				$course_rel_userdata = array(
-					'user_id' => getUserIDByUser_id($chamilo_user_id),
+					'user_id' => $retId, 
 					'c_id' => getCourseIDByCode($product->get_sku()),
 					'relation_type' => 0,
 					'status' => 5,
 					'relation_type' => 0,
 					'user_course_cat' => 0,
-					'sort' => 1,
+					'sort' => 10,
 				);	
 				$rltvesdb->insert( 
 					'course_rel_user',
@@ -286,7 +291,47 @@ function relatives_wc_completed($order_id) {
     error_log("$order_id set to RELATIVES-COMPLETED");
 }
 function relatives_wc_refunded($order_id) {
-    error_log("$order_id set to RELATIVES-REFUNDED");
+	
+	if(isset( $order_id) &&  0 != $order_id ){
+		$order = new WC_order( $order_id);
+	
+		$chamilo_code = 10000000 + $order->get_customer_id();
+
+		$table_name = 'tc_notes';
+		require_rltves_db(); // check db connection
+		$rltvesdb = $GLOBALS["rltvesdb"];
+		if (isset($rltvesdb)) {
+    
+			$userId = getUserIDByUsername($order->get_billing_email());
+
+			$items = $order->get_items();
+			// foreach item in the order
+			foreach ( $items as $item_key => $item_value ) {
+			
+				// product ID
+				$product_id = wc_get_order_item_meta( $item_key, '_product_id' );
+				$product = wc_get_product( $product_id );
+				
+				$course_rel_userdata = array(
+					'user_id' => $userId, 
+					'c_id' => getCourseIDByCode($product->get_sku()),
+				);	
+				$rltvesdb->delete( 
+					'course_rel_user',
+					$course_rel_userdata
+				);
+			}
+	
+			// $rltvesdb->insert( 
+			// 	$table_name, 
+			// 	array( 
+			// 		'info' => $info_data, 
+			// 	) 
+			// );
+
+		}
+	}
+	error_log("$order_id set to RELATIVES-REFUNDED");	
 }
 function relatives_wc_cancelled($order_id) {
     error_log("$order_id set to RELATIVES-CANCELLED");
@@ -374,6 +419,7 @@ function relatives_wc_product_update($product_id, $product) {
 		$coursedata = array(
 			'title' => $product->get_name(),
 			'code' => $product->get_sku(),
+			'directory' => $product->get_sku(),
 			'course_language' => 'brazilian',
 			'description' => $product->get_description(),
 			'category_code' => 'PG2020',
@@ -382,7 +428,7 @@ function relatives_wc_product_update($product_id, $product) {
 			'visual_code' => $product->get_sku(),
 			'subscribe' => 0,
 			'unsubscribe' => 0,
-			'disk_quota' => 10000000,
+			'disk_quota' => 20000000,
 			'add_teachers_to_sessions_courses' => 0,
 			'creation_date' =>current_time('mysql'), // (new DateTime())->format("Y-m-d h:i:s")
 		);
