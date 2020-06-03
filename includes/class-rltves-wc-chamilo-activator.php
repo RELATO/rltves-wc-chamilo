@@ -30,7 +30,6 @@ class Rltves_Wc_Chamilo_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
-
 	}
 
 }

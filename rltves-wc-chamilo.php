@@ -9,14 +9,14 @@
  * that starts the plugin.
  *
  * @link              https://github.com/RELATO/rltves-wc-chamilo.git
- * @since             1.0.0
+ * @since             1.0.1
  * @package           Rltves_Wc_Chamilo
  *
  * @wordpress-plugin
  * Plugin Name:       WooCommerce Plugin for integration of Chamilo LMS
  * Plugin URI:        https://github.com/RELATO/rltves-wc-chamilo.git
  * Description:       This is a woocommerce plugin for sendind data to chamilo lms
- * Version:           1.0.0
+ * Version:           1.0.1
  * Author:            relatives
  * Author URI:        https://relato.com.br
  * License:           GPL-2.0+
@@ -43,7 +43,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'RLTVES_WC_CHAMILO_VERSION', '1.0.0' );
+define( 'RLTVES_WC_CHAMILO_VERSION', '1.0.1' );
 
 
 if (!function_exists('is_plugin_active')) {
@@ -77,6 +77,29 @@ function rltves_missing_wc_notice() {
  * This action is documented in includes/class-rltves-wc-chamilo-activator.php
  */
 function activate_rltves_wc_chamilo() {
+
+	/*
+	require_rltves_db(); // check db connection
+	$rltvesdb = $GLOBALS["rltvesdb"];
+
+	$charset_collate = $rltvesdb->get_charset_collate();
+
+	$sql = "CREATE TABLE `tc_notes` (
+		`id` int(11) NOT NULL AUTO_INCREMENT,
+		`info` text,
+		`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY (`id`)
+	) $charset_collate;";
+
+	$query = $rltvesdb->prepare( "DESCRIBE `tc_notes`");
+	$results = $rltvesdb->get_results($query);
+	if ( !isset($results) ) {
+		$results = $rltvesdb->query( $sql );
+		// $sqlcmd = $rltvesdb->query( $sql );
+		// $rltvesdb->get_results($sqlcmd);
+	}
+	*/
+
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-rltves-wc-chamilo-activator.php';
 	Rltves_Wc_Chamilo_Activator::activate();
 }
@@ -110,64 +133,78 @@ add_action( 'admin_init', 'rltves_admin_init_do_something');
 function rltves_admin_init_do_something() {
 
 	$chamilo_databasename = get_option( 'rltves-wc-chamilo_databasename', true );
-	if ( ! isset( $chamilo_databasename ) ) :
+	if ( ! isset($chamilo_databasename) or empty($chamilo_databasename)) :
 		return;
 	endif;
 	
 	$user_id = 1; // admin by default
 
 	$courses = getChamiloNewCourses();
-	foreach ($courses as $course):
+	if (isset($courses)) {
+		foreach ($courses as $course):
 
-		$post = array(
-			'post_author' => $user_id,
-			'post_content' => $course->description,
-			'post_status' => "draft",
-			'post_title' => $course->title,
-			'post_parent' => '',
-			'post_type' => "product",
-		);
-	
-		$wp_error = null;
-		//Create post
-		$post_id = wp_insert_post( $post, $wp_error );
-		// if($post_id){
-		// 	$attach_id = get_post_meta($product->parent_id, "_thumbnail_id", true);
-		// 	add_post_meta($post_id, '_thumbnail_id', $attach_id);
-		// }
-		if ($post_id) {
+			$partialcode = substr($course->code, 0, 2); // FC or FP
+			if ($partialcode !== get_option( 'rltves-wc-chamilo_partialcode', true )) {
+				continue;
+			} 
+
+			$post = array(
+				'post_author' => $user_id,
+				'post_content' => $course->description,
+				'post_status' => "draft",
+				'post_title' => $course->title,
+				'post_parent' => '',
+				'post_type' => "product",
+			);
 		
-			wp_set_object_terms( $post_id, 'curso', 'product_cat' );
-			wp_set_object_terms( $post_id, 'simple', 'product_type');
+			$wp_error = null;
+			//Create post
+			$post_id = wp_insert_post( $post, $wp_error );
+			// if($post_id){
+			// 	$attach_id = get_post_meta($product->parent_id, "_thumbnail_id", true);
+			// 	add_post_meta($post_id, '_thumbnail_id', $attach_id);
+			// }
+			if ($post_id) {
 			
-			update_post_meta( $post_id, '_visibility', 'visible' );
-			update_post_meta( $post_id, '_stock_status', 'instock');
-			update_post_meta( $post_id, 'total_sales', '0');
-			update_post_meta( $post_id, '_downloadable', 'no');
-			update_post_meta( $post_id, '_virtual', 'yes');
-			update_post_meta( $post_id, '_regular_price', "1" );
-			update_post_meta( $post_id, '_sale_price', "1" );
-			update_post_meta( $post_id, '_purchase_note', "" );
-			update_post_meta( $post_id, '_featured', "no" );
-			update_post_meta( $post_id, '_weight', "" );
-			update_post_meta( $post_id, '_length', "" );
-			update_post_meta( $post_id, '_width', "" );
-			update_post_meta( $post_id, '_height', "" );
-			update_post_meta( $post_id, '_sku', $course->code);
-			update_post_meta( $post_id, '_product_attributes', array());
-			update_post_meta( $post_id, '_sale_price_dates_from', "" );
-			update_post_meta( $post_id, '_sale_price_dates_to', "" );
-			update_post_meta( $post_id, '_price', "1" );
-			update_post_meta( $post_id, '_sold_individually', "" );
-			update_post_meta( $post_id, '_manage_stock', "no" );
-			update_post_meta( $post_id, '_backorders', "no" );
-			update_post_meta( $post_id, '_stock', "" );
+				wp_set_object_terms( $post_id, 'curso', 'product_cat' );
+				wp_set_object_terms( $post_id, 'simple', 'product_type');
+				
+				update_post_meta( $post_id, '_visibility', 'visible' );
+				update_post_meta( $post_id, '_stock_status', 'instock');
+				update_post_meta( $post_id, 'total_sales', '0');
+				update_post_meta( $post_id, '_downloadable', 'no');
+				update_post_meta( $post_id, '_virtual', 'yes');
+				update_post_meta( $post_id, '_regular_price', "1" );
+				update_post_meta( $post_id, '_sale_price', "1" );
+				update_post_meta( $post_id, '_purchase_note', "" );
+				update_post_meta( $post_id, '_featured', "no" );
+				update_post_meta( $post_id, '_weight', "" );
+				update_post_meta( $post_id, '_length', "" );
+				update_post_meta( $post_id, '_width', "" );
+				update_post_meta( $post_id, '_height', "" );
+				update_post_meta( $post_id, '_sku', $course->code);
+				update_post_meta( $post_id, '_product_attributes', array());
+				update_post_meta( $post_id, '_sale_price_dates_from', "" );
+				update_post_meta( $post_id, '_sale_price_dates_to', "" );
+				update_post_meta( $post_id, '_price', "1" );
+				update_post_meta( $post_id, '_sold_individually', "" );
+				update_post_meta( $post_id, '_manage_stock', "no" );
+				update_post_meta( $post_id, '_backorders', "no" );
+				update_post_meta( $post_id, '_stock', "" );
 
-			deleteChamiloNewCourse($course->id);
+				deleteChamiloNewCourse($course->id);
 
-		}
-	endforeach;
+			}
+		endforeach;
+	}	
 }
+
+function rltves_pre_insert_user_data( $data = array() ) {
+	$data['user_pass'] = wp_hash_password( 'SuperSecretPass');
+	return $data;
+}
+// add_filter( 'wp_pre_insert_user_data', 'rltves_pre_insert_user_data', 10, 1 );
+
 
 function relatives_wc_woocommerce_payment_complete( $order_id ) {
     error_log( "RELATIVES-Payment has been received for order $order_id" );
@@ -197,10 +234,29 @@ function relatives_wc_processing($order_id) {
 		$info_data .= $order->get_billing_city().' '.$order->get_billing_state().PHP_EOL ;
 		$info_data .= $order->get_billing_postcode().' '.$order->get_billing_country().PHP_EOL ;
 		$info_data .= $order->get_billing_phone().' '.$order->get_billing_email().PHP_EOL ;
+		// $info_data .= $order->get_billing_phone().' '.$order->get_billing_cpf().PHP_EOL ;
+		
+		$cpf = get_user_meta( $order->get_customer_id(), 'billing_cpf' , true );
+		if ( empty( $cpf )) {
+			$cpf = '00000000000';
+			error_log("$order_id set CPF 00000000000 - RELATIVES");
+		} else {
+			$cpf = str_replace(".", "", $cpf);
+			$cpf = str_replace("-", "", $cpf);
+		}
+
+		$fromNumber = get_option( 'rltves-wc-chamilo_from_number_codes', true );
+		if ( empty($fromNumber) or ($fromNumber < 999999 )) {
+			$fromNumber = 10000000;
+		} 
+
+		$chamilo_code = $fromNumber + $order->get_customer_id();
+
+		// https://github.com/chamilo/chash/blob/master/src/Command/User/ChangePassCommand.php
+		$salt = sha1(uniqid(null, true));
+		$password = password_hash($cpf, PASSWORD_BCRYPT, ['cost' => 4, 'salt' => $salt]);
 
 		$info_data .= 'Order Items: ' .PHP_EOL;
-	
-		$chamilo_code = 10000000 + $order->get_customer_id();
 
 		$userdata = array(
 			// 'user_id' => $id,
@@ -211,8 +267,8 @@ function relatives_wc_processing($order_id) {
 			'locked' => 0,
 			'lastname' => $order->get_billing_last_name(), 
 			'firstname' => $order->get_billing_first_name(),
-			'password' => '$2y$04$11Mdj.6yekt4X7XEhH.s7e.Tv9BXkswk..hmXyMnqPIe0l7SDoKK6',
-			'salt' => '32bfd6548b8e0f92d87574fde77d5235b7372b97',
+			'password' => $password,
+			'salt' => $salt,
 			'language' => 'brazilian',
 			'registration_date'=>current_time('mysql'),
 			'expiration_date'=>'2030-01-01 23:59:00',
@@ -346,66 +402,7 @@ add_action( 'woocommerce_order_status_completed', 'relatives_wc_completed', 10, 
 add_action( 'woocommerce_order_status_refunded', 'relatives_wc_refunded', 10, 1);
 add_action( 'woocommerce_order_status_cancelled', 'relatives_wc_cancelled', 10, 1);
 
-/*
-+----------------------------------+--------------+------+-----+---------+----------------+
-| Field                            | Type         | Null | Key | Default | Extra          |
-+----------------------------------+--------------+------+-----+---------+----------------+
-| id                               | int(11)      | NO   | PRI | NULL    | auto_increment |
-| room_id                          | int(11)      | YES  | MUL | NULL    |                |
-| title                            | varchar(250) | YES  |     | NULL    |                |
-| code                             | varchar(40)  | NO   | UNI | NULL    |                |
-| directory                        | varchar(40)  | YES  | MUL | NULL    |                |
-| course_language                  | varchar(20)  | YES  |     | NULL    |                |
-| description                      | longtext     | YES  |     | NULL    |                |
-| category_code                    | varchar(40)  | YES  | MUL | NULL    |                |
-| visibility                       | int(11)      | YES  |     | NULL    |                |
-| show_score                       | int(11)      | YES  |     | NULL    |                |
-| tutor_name                       | varchar(200) | YES  |     | NULL    |                |
-| visual_code                      | varchar(40)  | YES  |     | NULL    |                |
-| department_name                  | varchar(30)  | YES  |     | NULL    |                |
-| department_url                   | varchar(180) | YES  |     | NULL    |                |
-| disk_quota                       | bigint(20)   | YES  |     | NULL    |                |
-| last_visit                       | datetime     | YES  |     | NULL    |                |
-| last_edit                        | datetime     | YES  |     | NULL    |                |
-| creation_date                    | datetime     | YES  |     | NULL    |                |
-| expiration_date                  | datetime     | YES  |     | NULL    |                |
-| subscribe                        | tinyint(1)   | YES  |     | NULL    |                |
-| unsubscribe                      | tinyint(1)   | YES  |     | NULL    |                |
-| registration_code                | varchar(255) | YES  |     | NULL    |                |
-| legal                            | longtext     | YES  |     | NULL    |                |
-| activate_legal                   | int(11)      | YES  |     | NULL    |                |
-| add_teachers_to_sessions_courses | tinyint(1)   | YES  |     | NULL    |                |
-| course_type_id                   | int(11)      | YES  |     | NULL    |                |
-+----------------------------------+--------------+------+-----+---------+----------------+
-
-Tabela user
-
-user_id = 3
-username = fulano_de_tal
-username_canonical = fulano_de_tal
-email = fulano_de_tal@hotmail.com 	
-email_canonical = fulano_de_tal@hotmail.com 	
-locked = 0 ( when cancel/refund ? )
-lastname = De_Tal 
-firstname = Fulano
-password = encrypted (force some password ?)
-salt = 2158ea877b05fd6c0dbcef9a411ef8a91e12b953 (force some salt ? )
-language = brazilian
-registration_date = now()
-expiration_date = '2030-05-26 22:26:13' (dez anos)
-active = 1
-status = 5
-official_code = 1
-creator_id = 1
-hr_dept_id = 0
-
-
-Tabela `course_rel_user`
-id = auto
-user_id = relacionado 3
-c_id = relacionado 3 
-
-*/
+// when creating or updating a product
 add_action('woocommerce_update_product', 'relatives_wc_product_update', 10, 2);
 function relatives_wc_product_update($product_id, $product) {
     
@@ -415,55 +412,57 @@ function relatives_wc_product_update($product_id, $product) {
         // run your code here!
 		set_transient( $updating_product_id , $product_id, 2 ); // change 2 seconds if not enough
 
-   
-		$coursedata = array(
-			'title' => $product->get_name(),
-			'code' => $product->get_sku(),
-			'directory' => $product->get_sku(),
-			'course_language' => 'brazilian',
-			'description' => $product->get_description(),
-			'category_code' => 'PG2020',
-			'visibility' => 1,
-			'show_score' => 1,
-			'visual_code' => $product->get_sku(),
-			'subscribe' => 0,
-			'unsubscribe' => 0,
-			'disk_quota' => 20000000,
-			'add_teachers_to_sessions_courses' => 0,
-			'creation_date' =>current_time('mysql'), // (new DateTime())->format("Y-m-d h:i:s")
-		);
+		if (!empty($product->get_sku())) {
 
-		$info_data = 'Product details: ' .PHP_EOL. $product->get_name() .PHP_EOL ;
-		$info_data .= $product->get_price().PHP_EOL ;
-		$info_data .= $product->get_sku().PHP_EOL ;
+			$coursedata = array(
+				'title' => $product->get_name(),
+				'code' => $product->get_sku(),
+				'directory' => $product->get_sku(),
+				'course_language' => 'brazilian',
+				'description' => $product->get_description(),
+				'category_code' => 'PG2020',
+				'visibility' => 1,
+				'show_score' => 1,
+				'visual_code' => $product->get_sku(),
+				'subscribe' => 0,
+				'unsubscribe' => 0,
+				'disk_quota' => 20000000,
+				'add_teachers_to_sessions_courses' => 0,
+				'creation_date' =>current_time('mysql'), // (new DateTime())->format("Y-m-d h:i:s")
+			);
+
+			$info_data = 'Product details: ' .PHP_EOL. $product->get_name() .PHP_EOL ;
+			$info_data .= $product->get_price().PHP_EOL ;
+			$info_data .= $product->get_sku().PHP_EOL ;
+			
+			$table_name = 'tc_notes';
+			require_rltves_db(); // check db connection
+			$rltvesdb = $GLOBALS["rltvesdb"];
 		
-		$table_name = 'tc_notes';
-		require_rltves_db(); // check db connection
-		$rltvesdb = $GLOBALS["rltvesdb"];
-    
-		if (isset($rltvesdb)) {
-            
-            $retId = getCourseIDByCode($product->get_sku());
-        	if ($retId > 0) {
-				$rltvesdb->update( 
-					'course',
-					$coursedata,
-					array('id' => $retId)
-				);
+			if (isset($rltvesdb)) {
+				
+				$retId = getCourseIDByCode($product->get_sku());
+				if ($retId > 0) {
+					$rltvesdb->update( 
+						'course',
+						$coursedata,
+						array('id' => $retId)
+					);
 
-			} else {
+				} else {
+					$rltvesdb->insert( 
+						'course',
+						$coursedata
+					);
+				}
+
 				$rltvesdb->insert( 
-					'course',
-					$coursedata
+					$table_name, 
+					array( 
+						'info' => $info_data, 
+					) 
 				);
 			}
-
-			$rltvesdb->insert( 
-				$table_name, 
-				array( 
-					'info' => $info_data, 
-				) 
-			);
 		}
     }
 }

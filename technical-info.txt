@@ -1,0 +1,125 @@
+Technical Useful Informations
+
+// ----------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE TRIGGER after_course_insert
+AFTER INSERT
+ON course FOR EACH ROW
+BEGIN
+    IF NEW.title IS NOT NULL THEN
+        INSERT INTO tc_newcourse(course_id, code, title, description)
+        VALUES(NEW.id, NEW.code, NEW.title, NEW.description);
+    END IF;
+END$$
+
+DELIMITER ;
+
+// ----------------------------------------------------------------------------
+
+DELIMITER $$
+
+CREATE TRIGGER before_user_insert
+BEFORE INSERT
+ON user FOR EACH ROW
+BEGIN 
+  	DECLARE newid int;
+  	SELECT MAX(id) 
+        FROM user 
+        INTO newid;
+
+    IF newid IS NULL THEN 
+        SET NEW.user_id=1;
+    ELSE
+     	SET NEW.user_id=(newid+1);
+    END IF;
+END$$
+
+DELIMITER ;
+
+// ----------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS `tc_notes`;
+CREATE TABLE `tc_notes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `info` text,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+// ----------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS `tc_newcourse`;
+CREATE TABLE `tc_newcourse` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `course_id` int(11) NOT NULL,
+  `code` varchar(40) COLLATE utf8_unicode_ci NOT NULL,
+  `title` varchar(250) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `description` longtext COLLATE utf8_unicode_ci,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+// ----------------------------------------------------------------------------
+
+
+
+course table
++----------------------------------+--------------+------+-----+---------+----------------+
+| Field                            | Type         | Null | Key | Default | Extra          |
++----------------------------------+--------------+------+-----+---------+----------------+
+| id                               | int(11)      | NO   | PRI | NULL    | auto_increment |
+| room_id                          | int(11)      | YES  | MUL | NULL    |                |
+| title                            | varchar(250) | YES  |     | NULL    |                |
+| code                             | varchar(40)  | NO   | UNI | NULL    |                |
+| directory                        | varchar(40)  | YES  | MUL | NULL    |                |
+| course_language                  | varchar(20)  | YES  |     | NULL    |                |
+| description                      | longtext     | YES  |     | NULL    |                |
+| category_code                    | varchar(40)  | YES  | MUL | NULL    |                |
+| visibility                       | int(11)      | YES  |     | NULL    |                |
+| show_score                       | int(11)      | YES  |     | NULL    |                |
+| tutor_name                       | varchar(200) | YES  |     | NULL    |                |
+| visual_code                      | varchar(40)  | YES  |     | NULL    |                |
+| department_name                  | varchar(30)  | YES  |     | NULL    |                |
+| department_url                   | varchar(180) | YES  |     | NULL    |                |
+| disk_quota                       | bigint(20)   | YES  |     | NULL    |                |
+| last_visit                       | datetime     | YES  |     | NULL    |                |
+| last_edit                        | datetime     | YES  |     | NULL    |                |
+| creation_date                    | datetime     | YES  |     | NULL    |                |
+| expiration_date                  | datetime     | YES  |     | NULL    |                |
+| subscribe                        | tinyint(1)   | YES  |     | NULL    |                |
+| unsubscribe                      | tinyint(1)   | YES  |     | NULL    |                |
+| registration_code                | varchar(255) | YES  |     | NULL    |                |
+| legal                            | longtext     | YES  |     | NULL    |                |
+| activate_legal                   | int(11)      | YES  |     | NULL    |                |
+| add_teachers_to_sessions_courses | tinyint(1)   | YES  |     | NULL    |                |
+| course_type_id                   | int(11)      | YES  |     | NULL    |                |
++----------------------------------+--------------+------+-----+---------+----------------+
+
+Tabela user
+
+user_id = 3
+username = fulano_de_tal
+username_canonical = fulano_de_tal
+email = fulano_de_tal@hotmail.com 	
+email_canonical = fulano_de_tal@hotmail.com 	
+locked = 0 ( when cancel/refund ? )
+lastname = De_Tal 
+firstname = Fulano
+password = encrypted (force some password ?)
+salt = 2158ea877b05fd6c0dbcef9a411ef8a91e12b953 (force some salt ? )
+language = brazilian
+registration_date = now()
+expiration_date = '2030-05-26 22:26:13' (dez anos)
+active = 1
+status = 5
+official_code = 1
+creator_id = 1
+hr_dept_id = 0
+
+
+Tabela `course_rel_user`
+id = auto
+user_id = relacionado 3
+c_id = relacionado 3 
+

@@ -48,12 +48,12 @@ $settings = array(
             'desc'      => '',
             'id'        => $prefix . 'chamilo_database_config_settings'
         ),
-        /*
         array(
-            'name' => __( 'Flagship Settings', 'rltves-wc-chamilo' ),
+            'name' => __( 'General Settings', 'rltves-wc-chamilo' ),
             'type' => 'title',
-            'id'   => $prefix . 'flagship_settings',
+            'id'   => $prefix . 'general_settings',
         ),
+        /*
         array(
             'id'        => $prefix . 'ship_propulsion_type',
             'name'      => __( 'Propulsion Type', 'rltves-wc-chamilo' ), 
@@ -62,26 +62,35 @@ $settings = array(
             'options'   => $propulsionTypes,
             'desc_tip'  => __( ' The primary propulsion type utilized by this flagship.', 'rltves-wc-chamilo')
         ),
+        */
         array(
-            'id'        => $prefix . 'ship_length',
-            'name'      => __( 'Length', 'rltves-wc-chamilo' ), 
-            'type'      => 'number',
-            'desc_tip'  => __( ' The length in meters of this ship.', 'rltves-wc-chamilo')
+            'id'        => $prefix . 'partialcode',
+            'name'      => __( 'First digits for codes', 'rltves-wc-chamilo' ), 
+            'type'      => 'text',
+            'desc_tip'  => __( ' Three digits for codes to starts with. ', 'rltves-wc-chamilo'),
+            'default'   => 'FC-'
         ),
         array(
-            'id'        => $prefix . 'ship_in_service',
-            'name'      => __( 'In Service?', 'rltves-wc-chamilo' ),
+            'id'        => $prefix . 'from_number_codes',
+            'name'      => __( 'From number codes', 'rltves-wc-chamilo' ), 
+            'type'      => 'number',
+            'desc_tip'  => __( ' The number value to use to generate codes from.', 'rltves-wc-chamilo'),
+            'default'   => '10000000'
+        ),
+        array(
+            'id'        => $prefix . 'allow_updates',
+            'name'      => __( 'Allow updates?', 'rltves-wc-chamilo' ),
             'type'      => 'checkbox',
-            'desc'  => __( 'Uncheck this box if the ship is out of service.', 'rltves-wc-chamilo' ),
+            'desc'  => __( 'Check this box if you want to synchronize updated records as well.', 'rltves-wc-chamilo' ),
             'default'   => 'yes'
         ),             
         array(
             'id'        => '',
-            'name'      => __( 'Flagship Settings', 'rltves-wc-chamilo' ),
+            'name'      => __( 'General Settings', 'rltves-wc-chamilo' ),
             'type'      => 'sectionend',
             'desc'      => '',
-            'id'        => $prefix . 'flagship_settings',
+            'id'        => $prefix . 'general_settings',
         ),
-        */                        
+
     );
 ?>
