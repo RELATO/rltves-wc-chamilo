@@ -68,7 +68,7 @@ $settings = array(
             'name'      => __( 'First digits for codes', 'rltves-wc-chamilo' ), 
             'type'      => 'text',
             'desc_tip'  => __( ' Three digits for codes to starts with. ', 'rltves-wc-chamilo'),
-            'default'   => 'FC-'
+            'default'   => 'FC'
         ),
         array(
             'id'        => $prefix . 'from_number_codes',

@@ -226,15 +226,15 @@ function relatives_wc_processing($order_id) {
 	if(isset( $order_id) &&  0 != $order_id ){
 		$order = new WC_order( $order_id);
 		
-		$info_data = 'Order details: ' .PHP_EOL. $order->get_id() .PHP_EOL ;
-		$info_data .= $order->get_total().PHP_EOL ;
-		$info_data .= $order->get_customer_id().PHP_EOL ;
-		$info_data .= $order->get_billing_first_name().' '.$order->get_billing_last_name().PHP_EOL ;
-		$info_data .= $order->get_billing_address_1().' '.$order->get_billing_address_2().PHP_EOL ;
-		$info_data .= $order->get_billing_city().' '.$order->get_billing_state().PHP_EOL ;
-		$info_data .= $order->get_billing_postcode().' '.$order->get_billing_country().PHP_EOL ;
-		$info_data .= $order->get_billing_phone().' '.$order->get_billing_email().PHP_EOL ;
-		// $info_data .= $order->get_billing_phone().' '.$order->get_billing_cpf().PHP_EOL ;
+		$info_data  = 'Order details: ' .PHP_EOL. 'Order ID: ' . $order->get_id() .PHP_EOL ;
+		$info_data .= 'Total: ' . $order->get_total().PHP_EOL ;
+		$info_data .= 'Customer ID: ' . $order->get_customer_id().PHP_EOL ;
+		$info_data .= 'Name: ' . $order->get_billing_first_name().' / '.$order->get_billing_last_name().PHP_EOL ;
+		$info_data .= 'Address: ' . $order->get_billing_address_1().' / '.$order->get_billing_address_2().PHP_EOL ;
+		$info_data .= 'City/State: ' . $order->get_billing_city().' / '.$order->get_billing_state().PHP_EOL ;
+		$info_data .= 'Post Code/Country: ' . $order->get_billing_postcode().' / '.$order->get_billing_country().PHP_EOL ;
+		$info_data .= 'Phone/E-mail: ' . $order->get_billing_phone().' / '.$order->get_billing_email().PHP_EOL ;
+
 		
 		$cpf = get_user_meta( $order->get_customer_id(), 'billing_cpf' , true );
 		if ( empty( $cpf )) {
@@ -255,8 +255,6 @@ function relatives_wc_processing($order_id) {
 		// https://github.com/chamilo/chash/blob/master/src/Command/User/ChangePassCommand.php
 		$salt = sha1(uniqid(null, true));
 		$password = password_hash($cpf, PASSWORD_BCRYPT, ['cost' => 4, 'salt' => $salt]);
-
-		$info_data .= 'Order Items: ' .PHP_EOL;
 
 		$userdata = array(
 			// 'user_id' => $id,
@@ -300,6 +298,7 @@ function relatives_wc_processing($order_id) {
 				$retId = $rltvesdb->insert_id;
 			}
 
+			$info_data .= ' - Order Items - ' .PHP_EOL;
 			$items = $order->get_items();
 			// foreach item in the order
 			foreach ( $items as $item_key => $item_value ) {
@@ -329,8 +328,21 @@ function relatives_wc_processing($order_id) {
 					'course_rel_user',
 					$course_rel_userdata
 				);
+
+				// got from https://github.com/chamilo/chash/blob/master/src/Command/User/AddUserCommand.php
+				// Add user to access_url_rel_user 
+				// $uas = "INSERT INTO access_url_rel_user (access_url_id, user_id) values (1, $retId)";
+				$access_url_rel_user = array(
+					'access_url_id' => 1,
+					'user_id' => $retId, 
+				);
+				$rltvesdb->insert( 
+					'access_url_rel_user',
+					$access_url_rel_user
+				);
 			}
 	
+			// save some log info
 			$rltvesdb->insert( 
 				$table_name, 
 				array( 

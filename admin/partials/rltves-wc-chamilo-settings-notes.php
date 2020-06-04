@@ -12,43 +12,30 @@
 
 $GLOBALS['hide_save_button'] = true;
 
+$rltvesdb = $GLOBALS["rltvesdb"];
+
+$content = "<h1>Last 5 notes: </h1>";
+
+if (isset($rltvesdb)) {
+
+    $rows = $rltvesdb->get_results("select created_at, info, id from tc_notes order by created_at desc limit 5");
+    
+    $content .= "
+    <table border=\"1\" width=\"100%\">
+        <tr>
+            <th>Date</th>
+            <th>Info</th>
+            <th>Id</th>
+        </tr>
+        ";
+        foreach ($rows as $row):
+            $content .= "<tr><td>".$row->created_at."</td>";
+            $content .= "<td>".$row->info."</td>";
+            $content .= "<td>".$row->id."</td></tr>";
+        endforeach;
+        $content .= "</table>";
+}      
 ?>
-<h1>Notas de processamento</h1>
 
-<table>
-    <tr>
-        <th>Id</th>
-        <th>Info</th>
-        <th>Date</th>
-    </tr>
-    <tr>
-        <td>5</td>
-        <td><span>Order details: 
-48<br/>
-90.00<br/>
-5<br/>
-Fulano De Tal<br/>
-rua das limas <br/>
-Osasco SP<br/>
-59062-050 BR<br/>
-01100980980 junior@ms4.io<br/>
-Order Items: <br/>
-Item: 28<br/>
-Name: Produto curso sensacional em promoção<br/>
-Prod ID: 46<br/>
-Prod SKU: pp9990<br/>
-        </span></td>
-        <td>2020-05-29 19:20:50</td>
-    </tr>
-    <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-    </tr>
-    <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-    </tr>
+<?php echo $content; ?>
 
-</table>
