@@ -317,6 +317,23 @@ function relatives_wc_processing($order_id) {
 				// error_log("RELATIVES-IMPORTANT: product_id = " + $product_id);
 				// error_log("RELATIVES-IMPORTANT: product_sku = " + $product->get_sku());
 				
+				// teacher
+				$course_rel_userdata = array(
+					'user_id' => 1, 
+					'c_id' => getCourseIDByCode($product->get_sku()),
+					'relation_type' => 0,
+					'status' => 1,
+					'relation_type' => 0,
+					'user_course_cat' => 0,
+					'sort' => 0,
+					'is_tutor' => 0,
+				);	
+				$rltvesdb->insert( 
+					'course_rel_user',
+					$course_rel_userdata
+				);
+
+				// student
 				$course_rel_userdata = array(
 					'user_id' => $retId, 
 					'c_id' => getCourseIDByCode($product->get_sku()),
@@ -330,6 +347,8 @@ function relatives_wc_processing($order_id) {
 					'course_rel_user',
 					$course_rel_userdata
 				);
+
+
 
 				// got from https://github.com/chamilo/chash/blob/master/src/Command/User/AddUserCommand.php
 				// Add user to access_url_rel_user 
