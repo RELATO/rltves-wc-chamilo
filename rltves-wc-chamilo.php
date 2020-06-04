@@ -267,6 +267,8 @@ function relatives_wc_processing($order_id) {
 			'firstname' => $order->get_billing_first_name(),
 			'password' => $password,
 			'salt' => $salt,
+			'auth_source' => 'platform',
+			'roles' => 'a:0:{}',
 			'language' => 'brazilian',
 			'registration_date'=>current_time('mysql'),
 			'expiration_date'=>'2030-01-01 23:59:00',
