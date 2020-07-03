@@ -317,10 +317,13 @@ function relatives_wc_processing($order_id) {
 				// error_log("RELATIVES-IMPORTANT: product_id = " + $product_id);
 				// error_log("RELATIVES-IMPORTANT: product_sku = " + $product->get_sku());
 				
+				$course_id = getCourseIDByCode($product->get_sku());
+				$session_id = getSessionIDByCourseID($product_id);
+
 				// teacher
 				$course_rel_userdata = array(
 					'user_id' => 1, 
-					'c_id' => getCourseIDByCode($product->get_sku()),
+					'c_id' => $course_id,
 					'relation_type' => 0,
 					'status' => 1,
 					'relation_type' => 0,
@@ -332,7 +335,49 @@ function relatives_wc_processing($order_id) {
 					'course_rel_user',
 					$course_rel_userdata
 				);
+	
+				/*
+				id	int(11) Auto Increment	
+				session_id	int(11) NULL	
+				user_id	int(11) NULL	
+				relation_type	int(11)	
+				duration	int(11) NULL	
+				moved_to	int(11) NULL	
+				moved_status	int(11) NULL	
+				moved_at	datetime NULL	
+				registered_at	datetime	
+				*/
+				
+				if ($session_id>0 and sessionExists($session_id)) {
+					
+					$session_rel_userdata = array(
+						'user_id' => $retId, 
+						'session_id' => $session_id, 
+						'relation_type' => 0,
+						'registered_at' => current_time('mysql')
 
+					);	
+					$rltvesdb->insert( 
+						'session_rel_user',
+						$session_rel_userdata
+					);
+
+					$session_rel_course_rel_user = array(
+						'user_id' => $retId, 
+						'session_id' => $session_id, 
+						'c_id' => $course_id,
+						'visibility' => 1,
+						'status' => 0,
+					);	
+
+					$rltvesdb->insert( 
+						'session_rel_course_rel_user',
+						$session_rel_course_rel_user
+					);
+				}
+			
+
+				/* old code
 				// student
 				$course_rel_userdata = array(
 					'user_id' => $retId, 
@@ -347,7 +392,7 @@ function relatives_wc_processing($order_id) {
 					'course_rel_user',
 					$course_rel_userdata
 				);
-
+				*/
 
 
 				// got from https://github.com/chamilo/chash/blob/master/src/Command/User/AddUserCommand.php
@@ -361,6 +406,7 @@ function relatives_wc_processing($order_id) {
 					'access_url_rel_user',
 					$access_url_rel_user
 				);
+
 			}
 	
 			// save some log info
@@ -487,6 +533,15 @@ function relatives_wc_product_update($product_id, $product) {
 						'course',
 						$coursedata
 					);
+					$retId = $rltvesdb->insert_id;
+					$access_url_rel_course = array(
+						'access_url_id' => 1,
+						'c_id' => $retId, 
+					);
+					$rltvesdb->insert( 
+						'access_url_rel_course',
+						$access_url_rel_course
+					);
 				}
 
 				$rltvesdb->insert( 
@@ -565,12 +620,34 @@ function getCourseIDByCode($code) {
 	
 	if (isset($rltvesdb)) {
 
-	  $idRef = $rltvesdb->get_var("SELECT id FROM course WHERE code = '".$code."'");  
-	  return $idRef;
+	  	$idRef = $rltvesdb->get_var("SELECT id FROM course WHERE code = '".$code."'");  
+	  	return $idRef;
 
 	} else {
 		return 0;
 	}
+}
+
+function getSessionIDByCourseID($product_id) {
+  	$session_id = get_post_meta($product_id, "id_da_sessao", true);
+	if ($session_id > 0) {
+		return $session_id;
+	}
+  	return 0;
+}
+
+function sessionExists($session_id) {
+	require_rltves_db(); // check db connection
+	$rltvesdb = $GLOBALS["rltvesdb"];
+	
+	if (isset($rltvesdb)) {
+
+	  	$idRef = $rltvesdb->get_var("SELECT id FROM session WHERE id = ".$session_id);  
+		if ($idRef > 0) {
+			return true;
+		}
+	}
+	return false;
 }
 
 function require_rltves_db() {
