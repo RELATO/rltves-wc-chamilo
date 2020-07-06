@@ -1,4 +1,21 @@
 /**
- * All of the CSS for your public-facing functionality should be
+ * All of the CSS for your admin-specific functionality should be
  * included in this file.
  */
+
+.tblrel>tbody>tr>td:first-child {
+    border-left-width: 0;
+}
+
+.tblrel>tbody>tr>td {
+    border-color: #eee;
+    border-width: 1px 0 0 1px;
+}
+.tblrel>tbody>tr>th, .tblrel>tbody>tr>td, .tblrel>thead>tr>th, .tblrel>thead>tr>td {
+    padding: 8px;
+    vertical-align: top;
+    background: #fff;
+    text-align: left;
+    border-style: solid;
+    font-weight: normal;
+}

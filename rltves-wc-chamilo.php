@@ -374,8 +374,10 @@ function relatives_wc_processing($order_id) {
 						'session_rel_course_rel_user',
 						$session_rel_course_rel_user
 					);
+					var_dump($course_id);
+					var_dump($session_id);
+					// die();
 				}
-			
 
 				/* old code
 				// student
@@ -393,7 +395,6 @@ function relatives_wc_processing($order_id) {
 					$course_rel_userdata
 				);
 				*/
-
 
 				// got from https://github.com/chamilo/chash/blob/master/src/Command/User/AddUserCommand.php
 				// Add user to access_url_rel_user 
@@ -667,9 +668,6 @@ function require_rltves_db() {
     } 
     
 }
-
-
-
 
 /**
  * Begins execution of the plugin.
