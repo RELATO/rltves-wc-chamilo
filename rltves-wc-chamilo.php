@@ -16,7 +16,7 @@
  * Plugin Name:       WooCommerce Plugin for integration of Chamilo LMS
  * Plugin URI:        https://github.com/RELATO/rltves-wc-chamilo.git
  * Description:       This is a woocommerce plugin for sendind data to chamilo lms
- * Version:           1.0.1
+ * Version:           1.0.2
  * Author:            relatives
  * Author URI:        https://relato.com.br
  * License:           GPL-2.0+
@@ -483,7 +483,7 @@ add_action( 'woocommerce_order_status_refunded', 'relatives_wc_refunded', 10, 1)
 add_action( 'woocommerce_order_status_cancelled', 'relatives_wc_cancelled', 10, 1);
 
 // when creating or updating a product
-add_action('woocommerce_update_product', 'relatives_wc_product_update', 10, 2);
+//add_action('woocommerce_update_product', 'relatives_wc_product_update', 10, 2);
 function relatives_wc_product_update($product_id, $product) {
     
     $updating_product_id = 'update_product_' . $product_id;
